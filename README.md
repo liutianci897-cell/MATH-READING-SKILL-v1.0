@@ -36,9 +36,6 @@ Engineering-style mathematical literature reading for AI research. Turn math pap
 ### Files
 - `MATH-READING-SKILL_v1.0.md` — Full skill definition, prompt, template, schema
 
-### License
-MIT recommended.
-
 ---
 
 ## 中文
@@ -73,6 +70,4 @@ MIT recommended.
 ### 文件说明
 - `MATH-READING-SKILL_v1.0.md` — 完整 skill 定义、提示词、模板、JSON schema
 
-### License
-推荐 MIT。
 
