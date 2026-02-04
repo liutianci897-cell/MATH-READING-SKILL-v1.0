@@ -6,96 +6,73 @@
 
 ## English
 
-**Engineering-style mathematical literature reading for AI research.**  
-Turn math papers into reusable research assets: traceable theorems/assumptions, proof-pattern extraction, proposition drafts, and curve-based evaluation protocols—**with anti-hallucination guardrails**.
+### What this is
+Engineering-style mathematical literature reading for AI research. Turn math papers into reusable assets: traceable theorems/assumptions, proof-pattern extraction, proposition drafts, and curve-based evaluation protocols — with anti-hallucination guardrails.
 
-> If you want “一区风格”的严谨度：clear problem setup + explicit assumptions + testable properties/guarantees + standardized evaluation protocols (curves, not single points).  
-> This repo provides an Agent Skill you can directly feed to an AI to execute.
+### Core guarantees (anti-hallucination)
+- Every key claim must include a location pointer (Theorem/Lemma/Section/Eq.)
+- evidence_quote ≤ 25 words per key claim
+- INFERRED vs EXTRACTED vs UNLOCATED must be explicit
+- Incomplete text → partial output + failure_report (never stall)
 
----
+### Deliverables (3 + 2 + 1)
+**Required (3)**
+- One-Pager
+- Symbol Mapping (≥10 rows)
+- Transferable Component
 
-## ✨ What this is
-This repository contains **MATH-READING-SKILL v1.0**, an Agent Skill (prompt + output contract + JSON schema) that converts a mathematical paper (PDF-to-text / LaTeX / pasted text) into structured deliverables for AI research:
+**Recommended (2)**
+- Proposition Draft
+- Protocol Draft (curve-based)
 
-- **Theorem-driven assets**: formal results, bounds, guarantees, assumptions (with strict source pointers)
-- **Method-driven assets**: proof skeletons, reusable proof patterns, lemma toolchains
-- **AI instantiation assets**: proposition drafts + curve-based evaluation protocols
-- **Knowledge-base assets**: toolbox entries ready for Notion/Obsidian/DB
+**Archive (1)**
+- Toolbox Entry
 
----
+### Quickstart
+1) Paste the **System Prompt** from `MATH-READING-SKILL_v1.0.md` into your agent/system instructions  
+2) Use the **User Prompt Template** to send `paper_meta`, `target_context`, and `paper_text`  
+3) Get outputs in **JSON + Markdown**
 
-## ✅ Core guarantees (anti-hallucination)
-The Skill enforces:
+### Files
+- `MATH-READING-SKILL_v1.0.md` — Full skill definition, prompt, template, schema
 
-1. **No hallucination**: every key claim must include a `location` pointer (Theorem/Lemma/Section/Eq.).  
-2. **Evidence quote cap**: each key claim includes an `evidence_quote` ≤ 25 words (or paraphrase + exact numbering).  
-3. **Explicit inference**: inferred content is tagged `INFERRED` with justification.  
-4. **Unlocated content is downgraded**: `UNLOCATED` + `low confidence` and must not be treated as fact.  
-5. **Never stalls**: if text is incomplete, output partial results + `failure_report` instead of stopping.
-
----
-
-## 📦 Deliverables (3 + 2 + 1)
-For each paper, the agent must output:
-
-### Required (3)
-- **One-Pager**: problem class, objects, assumptions, main results, proof skeleton, toolchain tags, limitations, next actions
-- **Symbol Mapping** (≥ 10 rows): paper symbols → meaning → your target correspondence
-- **Transferable Component**: at least one reusable theorem/bound OR proof pattern/framework
-
-### Recommended (2)
-- **Proposition Draft**: a paper-ready proposition/theorem (can be a weak version)
-- **Protocol Draft**: **curve-based** evaluation protocol (budget/noise/load/alpha sweeps)
-
-### Archive (1)
-- **Toolbox Entry**: database-ready entry for your personal math-method library
+### License
+MIT recommended.
 
 ---
 
-## 🗂 Repository contents
-- `MATH-READING-SKILL_v1.0.md`  
-  The full skill file: constraints, pipeline, output schema, system prompt, user prompt template.
+## 中文
 
-> If you only need one file: start with `MATH-READING-SKILL_v1.0.md`.
+### 这是什么
+一个“数学文献研读工程化”的 Agent Skill：把数学论文转成 AI 研究可复用资产，输出可追溯的定理/假设、证明套路抽象、命题草案与曲线型评测协议，并内置反幻觉约束。
 
----
+### 严格性保证（反幻觉）
+- 每条关键断言必须附 `location`（定理/引理/章节/公式）
+- 每条关键断言附 ≤25 词 `evidence_quote`
+- 必须区分 `EXTRACTED / INFERRED / UNLOCATED`
+- 文本不完整也不停摆：输出部分结果 + `failure_report`
 
-## 🚀 Quickstart (copy/paste)
-There are two common ways to use this skill.
+### 交付物（3 + 2 + 1）
+**必交付（3）**
+- One-Pager（结构化摘要）
+- 符号映射表（≥10行）
+- 可迁移组件（结论/思路至少一个）
 
-### Option A — Use in ChatGPT / Custom GPT / any agent that supports a “System Prompt”
-1. Copy the **System Prompt** section from `MATH-READING-SKILL_v1.0.md`.
-2. Set it as your agent/system instruction.
-3. Send a user message with the **User Prompt Template** (also included in the skill file).
-4. Paste the paper text (PDF-to-text / LaTeX / plain text).
-5. The agent returns:
-   - **(A) JSON** (machine-friendly)
-   - **(B) Markdown** (human-friendly)
+**建议交付（2）**
+- 命题草案（可写进论文）
+- 实验协议草案（必须是曲线型）
 
-### Option B — Use in your own pipeline (RAG/agent framework)
-- Store the system prompt as `math_reading_system_prompt.txt`
-- Your ingestion step converts PDF → text
-- Then call your model with:
-  - `system`: the prompt
-  - `user`: the template + paper text
-- Parse the returned JSON for automation (DB insert, tagging, search, etc.)
+**归档（1）**
+- Toolbox Entry（入库条目）
 
----
+### 快速使用
+1) 将 `MATH-READING-SKILL_v1.0.md` 中的 **System Prompt** 放进你的 Agent 系统提示词  
+2) 用 **User Prompt Template** 发送 `paper_meta`、`target_context`、`paper_text`  
+3) 输出得到 **JSON + Markdown**
 
-## 🧾 Input contract (recommended template)
-```text
-paper_meta:
-- title:
-- authors:
-- year:
-- venue/arxiv:
-- url (optional):
+### 文件说明
+- `MATH-READING-SKILL_v1.0.md` — 完整 skill 定义、提示词、模板、JSON schema
 
-target_context:
-- My AI research direction:
-- Constraints (compute/data/time):
-- Need formal guarantees? (yes/no):
-- desired_depth (lite/standard/deep):
+### License
+推荐 MIT。
 
-paper_text:
-<<< paste the paper text here >>>
