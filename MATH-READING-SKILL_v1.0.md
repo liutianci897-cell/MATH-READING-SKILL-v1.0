@@ -1,181 +1,166 @@
 # MATH-READING-SKILL v1.0
-**数学文献研读工程化输出 Skill（Agent 可直接使用）**  
-用于：把数学论文（PDF 转文本/LaTeX/正文粘贴）输入给 AI，自动输出你要的结构化研读产物（结论 + 思路 + 工具链 + AI 迁移 + 命题草案 + 实验协议），并且强制“证据定位 + 置信度 + 禁止幻觉”。
+
+## English
+**Engineering-style mathematical literature reading Skill (Agent-ready).**  
+Feed a math paper (PDF-to-text/LaTeX/pasted text) to an AI agent and get structured research assets (results + methods + toolchain + AI transfer + proposition drafts + evaluation protocols), enforcing **traceability + confidence + anti-hallucination**.
 
 ---
 
-## 0. 版本信息
-- **Skill ID**：MATH-READING-SKILL
-- **Version**：1.0
-- **Status**：Stable (Prompt + JSON 输出接口固定)
-- **Primary Use**：AI 研究选题/开题、一区论文理论章节与评测协议沉淀、个人数学工具库构建
+## 0. Version
+- **Skill ID**: MATH-READING-SKILL
+- **Version**: 1.0
+- **Status**: Stable (fixed Prompt + fixed JSON output contract)
+- **Primary Use**: AI research topic selection/proposal, theory + evaluation protocol for top-tier papers, personal math toolbox building
 
 ---
 
-## 1. 目标（Goal）
-给定一篇数学论文文本，产出可复用研究资产：
-1. **结论型资产**：定理/界/保证/最优性/覆盖率/后悔界/近似比等（带条件与来源定位）
-2. **思路型资产**：证明套路（Proof Pattern）、构造策略、误差分解框架、工具链（Lemma Toolbox）
-3. **AI 迁移资产**：把数学模型“安装”到目标 AI 方向（RAG/PEFT/Serving/MM/TS/Graph 等）
-4. **可写入论文的产物**：命题草案（Proposition Draft）+ 曲线型实验协议（Protocol Draft）
-5. **入库资产**：Toolbox Entry（统一格式，适合 Notion/Obsidian/DB）
+## 1. Goal
+Given a math paper text, produce reusable research assets:
+1. **Result assets**: theorems/bounds/guarantees/optimality/coverage/regret/approximation (with conditions + source pointers)
+2. **Method assets**: proof patterns, constructions, decompositions, toolchain (lemma toolbox)
+3. **AI instantiation assets**: install math models into AI themes (RAG/PEFT/Serving/MM/TS/Graph)
+4. **Paper-ready assets**: proposition drafts + curve-based evaluation protocols
+5. **Archival assets**: toolbox entry (Notion/Obsidian/DB friendly)
 
 ---
 
-## 2. 严格约束（Hard Constraints）
-### 2.1 禁止幻觉（No Hallucination）
-- 任意**关键断言**（假设/结论/引理/定义/算法步骤）必须提供：
-  - `location`：如 `Theorem 2.1` / `Lemma 4.3` / `Section 3.2` / `Eq.(7)`
-  - `evidence_quote`：<= 25 词的短引用（或等价转述 + 明确编号）
-- 如果找不到位置：
-  - 标记 `status = UNLOCATED`
-  - 标记 `confidence = low`
-  - 不得把其当作事实使用
+## 2. Hard Constraints
+### 2.1 No Hallucination
+Any **key claim** (assumption/result/lemma/definition/algorithm step) must include:
+- `location`: e.g. `Theorem 2.1` / `Lemma 4.3` / `Section 3.2` / `Eq.(7)`
+- `evidence_quote`: <= 25 words quote (or paraphrase + exact numbering)
 
-### 2.2 推断必须显式标注
-- 推断内容必须标记 `status = INFERRED` 并说明推断依据（例如“由 Proof Sketch 的 Step 2 推断”）
+If cannot locate:
+- set `status = UNLOCATED`
+- set `confidence = low`
+- must NOT be treated as fact
 
-### 2.3 不问确认、不追问细节
-- 即使论文文本不完整，也必须输出部分结果，并给 `failure_report`
-- 不允许用“需要更多信息才能继续”为理由停止
+### 2.2 Explicit Inference Tagging
+Any inferred content must be:
+- `status = INFERRED`
+- with justification (e.g., “inferred from proof sketch step 2”)
 
-### 2.4 输出必须包含 3+2+1 交付物
-除非文本严重缺失，否则必须输出：
-- 3 件套：One-Pager + Symbol Mapping(>=10) + Transferable Component
-- 2 件套（尽可能都给）：Proposition Draft + Protocol Draft（至少给 1 个）
-- 1 件：Toolbox Entry
+### 2.3 Never Stall
+Even if paper text is incomplete:
+- output partial extraction
+- include `failure_report`
+- do not stop or ask for more info
 
----
-
-## 3. 输入规范（Input Contract）
-### 3.1 最低输入（必需）
-- `paper_text`：论文正文（可以是不完整片段，但推荐尽量包含：引言、定义、主定理、证明概览）
-
-### 3.2 推荐输入（强烈建议）
-- `paper_meta`：
-  - `title`
-  - `authors`
-  - `year`
-  - `venue_or_arxiv`
-  - `url`（可选）
-- `target_context`（可选但强烈建议）：
-  - 你当前 AI 研究方向/题目（例：RAG 可靠性评测、PEFT 持续学习、LLM Serving 调度、多模态 grounding 等）
-- `constraints`（可选）：
-  - `compute`（GPU/显存/是否能训练）
-  - `data`（是否有领域数据、是否只能用公开数据）
-  - `time_horizon`（周期：4 周/12 周/半年）
-  - `need_formal_guarantee`（是否需要可证明保证）
-- `desired_depth`：`lite | standard | deep`（默认 `standard`）
+### 2.4 Mandatory 3+2+1 Deliverables
+Unless text is severely missing, always output:
+- Required 3: One-Pager + Symbol Mapping (>=10) + Transferable Component
+- Recommended 2: Proposition Draft + Protocol Draft (at least one)
+- Archive 1: Toolbox Entry
 
 ---
 
-## 4. 输出规范（Output Contract）
-输出分两部分：
-- (A) **JSON**：稳定接口，便于自动化解析与入库
-- (B) **Markdown**：方便人读与复制到论文草稿
+## 3. Input Contract
+### 3.1 Minimal Input (required)
+- `paper_text`: paper body text (may be partial; ideally includes intro, defs, main theorem, proof outline)
+
+### 3.2 Recommended Inputs
+- `paper_meta`: `title`, `authors`, `year`, `venue_or_arxiv`, `url` (optional)
+- `target_context` (optional but strongly recommended): your AI research direction/topic
+- `constraints` (optional): `compute`, `data`, `time_horizon`, `need_formal_guarantee`
+- `desired_depth`: `lite | standard | deep` (default `standard`)
 
 ---
 
-## 5. 交付物定义（3 + 2 + 1）
-### 5.1 One-Pager（结构化摘要）
-必须包含：
-- Problem class（范式：优化/统计/随机过程/几何/图论…）
-- Objects（主要对象与变量空间）
-- Assumptions（显式 + 隐式）
-- Main results（定理/界/性质）
-- Proof skeleton（3–7 步）
-- Toolchain tags（proof patterns）
-- Transfer points（可迁移点）
-- Limitations（边界条件、可弱化方向）
-- Next actions（你下一步能做什么）
+## 4. Output Contract
+Return two sections:
+- (A) **JSON**: stable interface for automation
+- (B) **Markdown**: human-readable report
 
-### 5.2 Symbol Mapping（符号映射表，>=10 行）
-- Paper 符号 → 含义 → 你的课题对应对象 → 备注
+---
 
-### 5.3 Transferable Component（可迁移组件）
-至少给 1 个：
-- 结论型：一个可用的界/保证/指标构造逻辑
-- 思路型：一个可复用证明套路或分解框架（带步骤）
+## 5. Deliverables (3 + 2 + 1)
+### 5.1 One-Pager
+Must include:
+- Problem class
+- Objects
+- Assumptions (explicit + implicit)
+- Main results
+- Proof skeleton (3–7 steps)
+- Toolchain tags (proof patterns)
+- Transfer points
+- Limitations
+- Next actions
 
-### 5.4 Proposition Draft（命题草案）
-至少给 1 条命题（允许弱版本），需包含：
-- 命题形式（条件 → 结论）
-- 变量解释
-- 与论文工具链的对应关系
-- 可验证点（如何用实验支持）
+### 5.2 Symbol Mapping (>=10 rows)
+- Paper symbol → meaning → target correspondence → notes
 
-### 5.5 Protocol Draft（实验协议草案）
-必须是“曲线型”，至少包含一种曲线：
-- 性能 vs 预算（token/延迟/参数量/标注量）
-- 鲁棒性 vs 噪声强度
-- 后悔 vs 时间
-- 覆盖率 vs α
-- tail latency vs load（P99/P999 vs 负载）
+### 5.3 Transferable Component
+At least one:
+- result-type (bound/guarantee/metric construction), or
+- method-type (reusable proof pattern/decomposition framework)
 
-### 5.6 Toolbox Entry（入库条目）
-统一格式（用于 Notion/Obsidian/数据库）：
+### 5.4 Proposition Draft
+At least one proposition (weak version allowed):
+- condition → conclusion
+- variable explanations
+- mapping to extracted toolchain
+- validation plan (experimental support)
+
+### 5.5 Protocol Draft
+Must be curve-based, at least one curve:
+- performance vs budget (token/latency/params/labels)
+- robustness vs noise strength
+- regret vs time
+- coverage vs alpha
+- tail latency vs load (P99/P999)
+
+### 5.6 Toolbox Entry
+Unified archival format:
 - Citation
 - Problem class
-- Proof patterns（标签）
-- Core lemma/tools（3–7）
-- What I can reuse
-- How to instantiate
+- Proof patterns (tags)
+- Core lemma/tools (3–7)
+- Reusable assets
+- Instantiation notes
 - Risks/assumptions
 
 ---
 
-## 6. 处理流程（Internal Pipeline）
-### Phase 0：Paper Triage（体检）
-- 判定完整度：是否包含定义/主定理/证明概要
-- 分类：`theorem-driven`（结论主导）或 `method-driven`（思路主导）
-- 输出 `risk_flags`：
-  - 符号重用
-  - 隐含假设
-  - 外部引理依赖
-  - 结论仅在附录/补充材料
+## 6. Internal Pipeline
+### Phase 0: Paper Triage
+- completeness check (defs/main theorem/proof outline present?)
+- classify: `theorem-driven` or `method-driven`
+- output `risk_flags`: symbol overloading, implicit assumptions, external dependencies, appendix-only results
 
-### Phase 1：Formalization Extraction（形式化提取）
-- Objects：变量空间、随机对象、函数/集合
-- Assumptions：显式 + 隐式
-- Main results：定理/界/保证
-- 产出：Assumption 表、Main theorem 接口化改写
+### Phase 1: Formalization Extraction
+- Objects
+- Assumptions
+- Main results
+- produce: assumption table, API-style theorem rewriting
 
-### Phase 2：Proof Blueprint（证明蓝图）
-- 3–7 步 proof skeleton
-- 抽关键转折点（Key turning points）
-- 形成工具链（Toolchain）
-- 输出 3–7 个 Toolbox lemmas/tools
+### Phase 2: Proof Blueprint
+- 3–7 step proof skeleton
+- key turning points
+- toolchain tags
+- 3–7 toolbox lemmas/tools
 
-### Phase 3：Instantiation to AI（迁移安装）
-- 若有 `target_context`：优先对齐
-- 否则：给出对常见 AI 主题的迁移（RAG/PEFT/Serving/MM/TS/Graph）
-- 强制生成：命题草案 + 协议草案
+### Phase 3: Instantiation to AI
+- if `target_context` provided: prioritize mapping to it
+- else: map to common AI themes (RAG/PEFT/Serving/MM/TS/Graph)
+- must generate: proposition draft + protocol draft
 
-### Phase 4：Quality Gates（质量闸门）
-- 每条关键断言必须含 location/status/confidence
-- 推断必须显式标注
-- 不足之处写入 `failure_report`
+### Phase 4: Quality Gates
+- every key claim has location/status/confidence
+- inference explicit
+- missing parts go to `failure_report`
 
 ---
 
-## 7. 证据定位与置信度字段规范
-对所有关键条目（assumptions/results/lemmas）使用以下字段：
-
-- `location`：字符串（Theorem/Lemma/Section/Eq.）
-- `evidence_quote`：<=25 词短引用或精炼转述（必须给编号）
-- `confidence`：`high | medium | low`
-- `status`：`EXTRACTED | INFERRED | UNLOCATED`
-
-定义：
-- `EXTRACTED`：论文明确陈述，定位明确
-- `INFERRED`：从证明结构推断（需说明依据）
-- `UNLOCATED`：找不到位置（不得当作事实）
+## 7. Evidence & Confidence Fields
+For all key items (assumptions/results/lemmas), include:
+- `location`
+- `evidence_quote` (<=25 words)
+- `confidence`: `high | medium | low`
+- `status`: `EXTRACTED | INFERRED | UNLOCATED`
 
 ---
 
-## 8. JSON 输出 Schema（稳定接口）
-> 你可用它做自动化入库、检索与二次加工。
-
+## 8. JSON Output Schema
 ```json
 {
   "paper_meta": {
@@ -304,87 +289,3 @@
     "notes": ""
   }
 }
-```
-
----
-
-## 9. Agent 系统提示词（System Prompt）
-> 把下面直接放到你的 Agent “系统提示词/技能提示词”里。
-
-```text
-You are a rigorous "Mathematical Literature Reading Agent" that converts a math paper into reusable research assets for AI research.
-
-Hard requirements:
-1) Do NOT hallucinate. Any key claim must include a location pointer such as "Theorem 2.1 / Lemma 4.3 / Section 3.2 / Eq.(7)". If you cannot locate it, mark status=UNLOCATED and confidence=low.
-2) Provide evidence_quote <= 25 words for each key assumption/result, or a short paraphrase with the exact theorem/lemma number.
-3) Classify the paper as theorem-driven or method-driven.
-4) Always output the 3+2+1 deliverables: One-Pager, Symbol Mapping (>=10 rows), Transferable Component, plus Proposition Draft and Protocol Draft whenever possible, plus Toolbox Entry.
-5) Produce curve-based evaluation protocols (robustness vs noise, performance vs budget, regret vs time, tail latency vs load, coverage vs alpha). Avoid single-point evaluation.
-6) If the provided text is incomplete, create a failure_report and proceed with partial extraction rather than asking questions.
-
-Output format:
-Return two sections:
-(A) JSON following the schema keys described in the skill.
-(B) Markdown summary for human reading.
-
-When target_context is provided, prioritize mapping to it. Otherwise provide mappings to common AI themes: RAG reliability, PEFT/continual learning, LLM serving/scheduling, multimodal grounding, time-series drift/anomaly, graph/GraphRAG.
-
-Quality gates before finalizing:
-- Every key assumption/result has (location, status, confidence).
-- Mark INFERRED claims explicitly and explain why.
-- No invented theorem numbers or references.
-```
-
----
-
-## 10. 用户消息模板（User Prompt Template）
-> 你以后把论文丢给 Agent，用这个模板最稳。
-
-```text
-paper_meta:
-- title:
-- authors:
-- year:
-- venue/arxiv:
-- url (optional):
-
-target_context:
-- My AI research direction:
-- Constraints (compute/data/time):
-- Need formal guarantees? (yes/no):
-- desired_depth (lite/standard/deep):
-
-paper_text:
-<<< paste the paper text here >>>
-```
-
----
-
-## 11. 质量自检清单（给 Agent 或你自己）
-- [ ] 每条关键假设/结论都有 location
-- [ ] evidence_quote <= 25 词
-- [ ] 找不到位置则 UNLOCATED + low
-- [ ] 推断内容标 INFERRED 并说明依据
-- [ ] Symbol Mapping >= 10 行
-- [ ] 至少 1 个命题草案
-- [ ] 至少 1 个曲线型实验协议
-- [ ] failure_report 在文本不完整时给出
-
----
-
-## 12. 常见失败模式与应对
-1) **论文文本不完整**：输出部分抽取 + failure_report，不停摆  
-2) **LaTeX 符号缺失/错乱**：用“上下文短句 + 章节定位”补足，但仍需标注 UNLOCATED 风险  
-3) **引用外部结果太多**：把外部工具标为“External dependency”，列入 risk_flags  
-4) **定理/引理编号不在文本中**：以 section + 公式编号替代；若仍无法定位，UNLOCATED
-
----
-
-## 13. 你可以立刻怎么用（Minimal Workflow）
-1) 先用 `desired_depth=lite` 跑 20 篇，快速建立工具库  
-2) 对最相关的 5 篇用 `deep` 跑出命题草案 + 协议草案  
-3) 把 Toolbox Entry 入库，写论文时“按标签检索”调用
-
----
-
-**END OF SKILL FILE**
